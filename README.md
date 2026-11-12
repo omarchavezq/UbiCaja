@@ -15,5 +15,3 @@ Sistema de identificación de cajas: una aplicación Flutter, un gateway ESP32-C
 - `ubicaja/comando/A`, `/B` → `SONAR` / `DETENER`
 - `ubicaja/etiqueta/{id}/entrega` → `GATT_OK` / `NO_ENCONTRADA`
 - `ubicaja/etiqueta/{id}/estado` → `REPOSO` / `ALERTA` / `ENCONTRADA` / `NO_ENCONTRADA`
-
-La configuración privada de Wi-Fi y broker se carga desde `secrets.h`, que no debe publicarse.
