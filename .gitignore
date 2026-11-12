@@ -1,0 +1,10 @@
+secrets.h
+.env
+.env.*
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.pyc
+__pycache__/
+.DS_Store

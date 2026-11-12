@@ -1,0 +1,12 @@
+name: ubicaja
+version: 1.0.0+1
+description: Aplicación móvil UbiCaja: búsqueda de cajas y supervisión por MQTT.
+publish_to: none
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  mqtt_client: ^10.5.1
+flutter:
+  uses-material-design: true

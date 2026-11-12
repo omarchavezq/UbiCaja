@@ -1,0 +1,50 @@
+{
+  "contexto": "SOLO DEMOSTRACIÓN SOFTWARE CON DATOS SINTÉTICOS; NO RESULTADOS DE UBICAJA FÍSICO",
+  "data": {
+    "N": 720,
+    "train": 504,
+    "validacion": 108,
+    "test": 108
+  },
+  "accuracy_test_sintetico": 0.8981481481481481,
+  "por_clase": [
+    {
+      "clase": "CERCA",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "n_test": 36
+    },
+    {
+      "clase": "INTERMEDIO",
+      "precision": 1.0,
+      "recall": 0.6944444444444444,
+      "f1": 0.819672131147541,
+      "n_test": 36
+    },
+    {
+      "clase": "LEJOS",
+      "precision": 0.7659574468085106,
+      "recall": 1.0,
+      "f1": 0.8674698795180723,
+      "n_test": 36
+    }
+  ],
+  "matriz_confusion": [
+    [
+      36,
+      0,
+      0
+    ],
+    [
+      0,
+      25,
+      11
+    ],
+    [
+      0,
+      0,
+      36
+    ]
+  ]
+}
