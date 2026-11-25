@@ -3,7 +3,7 @@
    El sketch simula solo señales digitales; BLE y MQTT se programan en los firmwares.
 */
 #include <Arduino.h>
-constexpr int LED_PIN=4, BUZZER_PIN=5, BUTTON_PIN=6;
+constexpr int LED_PIN=3, BUTTON_PIN=4, BUZZER_PIN=5;  // igual que el PCB
 constexpr uint32_t MAX_ALERTA_MS=120000, RESULTADO_MS=10000;
 enum Estado {REPOSO,ALERTA,ENCONTRADA,NO_ENCONTRADA};
 Estado estado=REPOSO;

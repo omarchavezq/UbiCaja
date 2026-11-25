@@ -10,12 +10,12 @@
     {"type":"wokwi-buzzer","id":"buzz","top":80,"left":250,"attrs":{"volume":"0.1"}}
   ],
   "connections": [
-    ["esp:4","r1:1","green",["h0"]],
+    ["esp:3","r1:1","green",["h0"]],
     ["r1:2","led1:A","green",["h0"]],
     ["led1:C","esp:GND.1","black",["h0"]],
     ["esp:5","buzz:2","green",["h0"]],
     ["buzz:1","esp:GND.1","black",["h0"]],
-    ["esp:6","btn:1.l","blue",["h0"]],
+    ["esp:4","btn:1.l","blue",["h0"]],
     ["btn:2.l","esp:GND.1","black",["h0"]]
   ],
   "dependencies": {}
