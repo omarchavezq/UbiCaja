@@ -71,9 +71,9 @@ powershell -ExecutionPolicy Bypass -File .\Demo\cargar_firmware.ps1 -Placa gatew
 
 - Abrir `Firmware/Etiqueta_ESP32C3`, `TAG_ID "A"`, cargar.
 - Monitor serie a 115200: debe decir `UBICAJA_A anunciando por BLE`.
-- **El buzzer se alimenta de VBAT**: con la placa solo por USB y sin batería, el LED funciona pero el buzzer no suena. Conectar la batería.
+- **El buzzer es pasivo y se alimenta de VBAT**: el firmware lo excita con PWM (melodías). Con la placa solo por USB y sin batería, el LED funciona pero el buzzer no suena. Conectar la batería.
 - **Cerrar el jumper JP1** si la placa se va a alimentar desde la batería (une la salida del regulador con +3,3 V).
-- Prueba rápida sin gateway: app **nRF Connect** (iOS, gratis) → conectar a `UBICAJA_A` → característica `...d001` → escribir texto `SONAR`. Debe parpadear y sonar; el pulsador lo pasa a ENCONTRADA (LED fijo + beep).
+- Prueba rápida sin gateway: app **nRF Connect** (iOS, gratis) → conectar a `UBICAJA_A` → característica `...d001` → escribir texto `SONAR`. Debe parpadear y tocar la melodía de búsqueda; el pulsador lo pasa a ENCONTRADA (LED fijo + melodía corta de confirmación).
 
 ## 3. Red y broker (laptop)
 
@@ -115,7 +115,7 @@ Para probar en la laptop antes: `flutter run -d chrome --dart-define=MQTT_HOST=l
 
 1. Mostrar la app: gateway CONECTADO, Caja A en REPOSO, enlace BLE_CONECTADA.
 2. "Hacer sonar" → la etiqueta parpadea y suena; la tarjeta se pone amarilla (ALERTA).
-3. Presionar el pulsador → LED fijo + beep, la tarjeta se pone verde (ENCONTRADA) en menos de 1 s.
+3. Presionar el pulsador → LED fijo + melodía de confirmación, la tarjeta se pone verde (ENCONTRADA) en menos de 1 s.
 4. A los 10 s vuelve sola a REPOSO.
 5. Opcional: "Sonar" y no presionar nada; a los 120 s pasa a NO_ENCONTRADA (rojo). Para la demo conviene bajar `TIEMPO_MAX_BUSQUEDA_MS` a 20000.
 6. Mostrar la pestaña Historial y la consola de Mosquitto con los mensajes.

@@ -2,7 +2,8 @@
    Pines según el esquemático del PCB (DIAGRAMA PCB.pdf):
      GPIO3 -> LED (R19 1k, activo en alto)
      GPIO4 -> pulsador "MUTE" (R18 10k pull-up + 100 nF, activo en bajo)
-     GPIO5 -> buzzer (MOSFET AO3400, buzzer alimentado desde VBAT, activo en alto)
+     GPIO5 -> buzzer PASIVO (MOSFET AO3400, buzzer alimentado desde VBAT)
+   El buzzer es pasivo: se excita con PWM (LEDC) a la frecuencia de cada nota.
    El buzzer se alimenta de VBAT: sin batería conectada no suena.
    Compilar con TAG_ID "A" o "B" para cada etiqueta. */
 #include <Arduino.h>
@@ -24,7 +25,43 @@ constexpr uint32_t MOSTRAR_RESULTADO_MS = 10000;
 NimBLECharacteristic* estadoBle = nullptr;
 uint32_t ultimoCambioBoton = 0;
 bool botonAnterior = HIGH;
-uint32_t finBeep = 0;
+
+// ---------- Melodías para buzzer pasivo (reproducción sin bloquear el loop) ----------
+struct Nota { uint16_t hz; uint16_t ms; };     // hz = 0 -> silencio
+// Búsqueda: arpegio tipo órgano La m – Fa – Do – Sol, en bucle mientras dure la ALERTA.
+#define ARP(r,q,o,t) {r,170},{q,170},{o,170},{q,170},{t,170},{q,170},{o,170},{q,170}
+static const Nota MELODIA_BUSQUEDA[] = {
+  ARP(440, 659,  880, 1047),   // La menor
+  ARP(349, 523,  698,  880),   // Fa mayor
+  ARP(523, 784, 1047, 1319),   // Do mayor
+  ARP(392, 587,  784,  988),   // Sol mayor
+  {0, 250}
+};
+// Encontrada: subida corta y alegre.
+static const Nota MELODIA_ENCONTRADA[] = { {1047,90},{1319,90},{1568,90},{2093,260} };
+// No encontrada: bajada.
+static const Nota MELODIA_NO_ENCONTRADA[] = { {784,200},{659,200},{523,200},{392,450} };
+
+const Nota* melodia = nullptr;
+size_t largoMelodia = 0, indiceNota = 0;
+bool repetirMelodia = false;
+uint32_t finNota = 0;
+
+void tocarNota(uint16_t hz) { ledcWriteTone(PIN_BUZZER, hz); }   // 0 Hz = silencio
+template<size_t N> void iniciarMelodia(const Nota (&m)[N], bool repetir) {
+  melodia = m; largoMelodia = N; indiceNota = 0; repetirMelodia = repetir;
+  tocarNota(m[0].hz); finNota = millis() + m[0].ms;
+}
+void detenerMelodia() { melodia = nullptr; tocarNota(0); }
+void actualizarMelodia() {
+  if (!melodia || (int32_t)(millis() - finNota) < 0) return;
+  if (++indiceNota >= largoMelodia) {
+    if (!repetirMelodia) { detenerMelodia(); return; }
+    indiceNota = 0;
+  }
+  tocarNota(melodia[indiceNota].hz);
+  finNota = millis() + melodia[indiceNota].ms;
+}
 
 const char* nombreEstado(Estado e) {
   switch(e) {
@@ -44,7 +81,12 @@ void cambiarEstado(Estado nuevo) {
   estado=nuevo;
   if (nuevo==ALERTA) inicioAlerta=millis();
   if (nuevo==ENCONTRADA || nuevo==NO_ENCONTRADA) inicioResultado=millis();
-  if (nuevo==ENCONTRADA) finBeep=millis()+150;   // beep corto de confirmación
+  switch (nuevo) {
+    case ALERTA:        iniciarMelodia(MELODIA_BUSQUEDA, true); break;
+    case ENCONTRADA:    iniciarMelodia(MELODIA_ENCONTRADA, false); break;
+    case NO_ENCONTRADA: iniciarMelodia(MELODIA_NO_ENCONTRADA, false); break;
+    case REPOSO:        detenerMelodia(); break;
+  }
   publicarEstado();
 }
 // La característica BLE solo acepta órdenes explícitas.
@@ -57,8 +99,10 @@ class ManejadorOrden : public NimBLECharacteristicCallbacks {
 };
 void setup(){
   Serial.begin(115200);
-  pinMode(PIN_LED,OUTPUT); pinMode(PIN_BUZZER,OUTPUT); pinMode(PIN_BUTTON,INPUT_PULLUP);
-  digitalWrite(PIN_LED,LOW); digitalWrite(PIN_BUZZER,LOW);
+  pinMode(PIN_LED,OUTPUT); pinMode(PIN_BUTTON,INPUT_PULLUP);
+  digitalWrite(PIN_LED,LOW);
+  ledcAttach(PIN_BUZZER, 2000, 10);   // PWM para el buzzer pasivo (núcleo ESP32 3.x)
+  tocarNota(0);
   NimBLEDevice::init("UBICAJA_" TAG_ID);
   NimBLEServer* servidor=NimBLEDevice::createServer();
   servidor->advertiseOnDisconnect(true);
@@ -91,12 +135,11 @@ void loop(){
   if(estado==ALERTA && millis()-inicioAlerta>=TIEMPO_MAX_BUSQUEDA_MS) cambiarEstado(NO_ENCONTRADA);
   if((estado==ENCONTRADA || estado==NO_ENCONTRADA) &&
      millis()-inicioResultado>=MOSTRAR_RESULTADO_MS) cambiarEstado(REPOSO);
-  // ALERTA: LED y buzzer intermitentes. ENCONTRADA: LED fijo. NO_ENCONTRADA: LED parpadeo lento.
+  // ALERTA: LED intermitente + melodía. ENCONTRADA: LED fijo. NO_ENCONTRADA: LED parpadeo lento.
+  actualizarMelodia();
   bool pulso=(millis()/300)%2 == 0;
   bool led=(estado==ALERTA && pulso) || estado==ENCONTRADA ||
            (estado==NO_ENCONTRADA && (millis()/1000)%2==0);
-  bool buzzer=(estado==ALERTA && pulso) || (int32_t)(finBeep-millis())>0;
   digitalWrite(PIN_LED,led?HIGH:LOW);
-  digitalWrite(PIN_BUZZER,buzzer?HIGH:LOW);
-  delay(15);
+  delay(5);
 }

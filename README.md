@@ -27,7 +27,7 @@ Sistema de identificación de cajas: una aplicación Flutter, un gateway ESP32-C
 
 ### Pines de la etiqueta (PCB)
 
-GPIO3 LED · GPIO4 pulsador (MUTE, activo en bajo) · GPIO5 buzzer vía MOSFET AO3400 (alimentado desde VBAT).
+GPIO3 LED · GPIO4 pulsador (MUTE, activo en bajo) · GPIO5 buzzer pasivo vía MOSFET AO3400 (alimentado desde VBAT, excitado por PWM con melodías).
 
 ### Demo
 
