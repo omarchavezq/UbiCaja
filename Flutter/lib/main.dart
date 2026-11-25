@@ -16,15 +16,22 @@ class UbiCajaApp extends StatefulWidget {
 
 class _UbiCajaAppState extends State<UbiCajaApp> {
   final ctl = Controlador();
+  AppLifecycleListener? _ciclo;
 
   @override
   void initState() {
     super.initState();
-    if (widget.iniciarConexion) ctl.iniciar();
+    if (widget.iniciarConexion) {
+      ctl.iniciar();
+      // Al volver a la app (desbloquear el iPhone o regresar a Safari) se rehace la conexión
+      // para no mostrar estados viejos de una conexión que el sistema cortó en segundo plano.
+      _ciclo = AppLifecycleListener(onResume: ctl.conectar);
+    }
   }
 
   @override
   void dispose() {
+    _ciclo?.dispose();
     ctl.dispose();
     super.dispose();
   }

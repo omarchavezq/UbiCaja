@@ -64,7 +64,15 @@ class Controlador extends ChangeNotifier {
       } catch (_) {}
     }
     // Reloj para los contadores "hace X s" y el cronómetro de búsqueda.
-    _reloj = Timer.periodic(const Duration(seconds: 1), (_) => notifyListeners());
+    // Si el reloj se saltó varios segundos, la página estuvo dormida (iPhone bloqueado o Safari
+    // en segundo plano) y la conexión pudo morir sin aviso: se rehace para traer el estado actual.
+    var ultimoTic = DateTime.now();
+    _reloj = Timer.periodic(const Duration(seconds: 1), (_) {
+      final ahora = DateTime.now();
+      if (ahora.difference(ultimoTic) > const Duration(seconds: 5)) conectar();
+      ultimoTic = ahora;
+      notifyListeners();
+    });
     notifyListeners();
     await conectar();
   }
@@ -74,14 +82,23 @@ class Controlador extends ChangeNotifier {
     conectando = true;
     notifyListeners();
     await _sub?.cancel();
-    try { _cliente?.disconnect(); } catch (_) {}
+    final anterior = _cliente;
+    _cliente = null; // así el aviso de desconexión del cliente anterior se ignora
+    try { anterior?.disconnect(); } catch (_) {}
     final c = crearCliente(host, 'ubicaja_app_${DateTime.now().millisecondsSinceEpoch}', puerto, puertoWs);
     c.logging(on: false);
-    c.keepAlivePeriod = 30;
-    c.autoReconnect = true;
+    // Safari en iPhone corta el WebSocket sin avisar al bloquear la pantalla o cambiar de app.
+    // Con ping cada 10 s y corte si no responde en 5 s, la conexión muerta se detecta y se rehace.
+    c.keepAlivePeriod = 10;
+    c.disconnectOnNoResponsePeriod = 5;
     c.setProtocolV311(); // los brokers en la nube no aceptan MQTT 3.1
-    c.onDisconnected = () { conectado = false; notifyListeners(); };
-    c.onAutoReconnected = () { conectado = true; notifyListeners(); };
+    c.onDisconnected = () {
+      if (_cliente != c) return;
+      conectado = false;
+      notifyListeners();
+      // Reconexión completa: vuelve a suscribirse y recibe los estados retenidos actuales.
+      Future.delayed(const Duration(seconds: 2), () { if (_cliente == c && !conectado) conectar(); });
+    };
     c.connectionMessage = MqttConnectMessage().withClientIdentifier(c.clientIdentifier).startClean();
     try {
       if (usuario.isEmpty) { await c.connect(); } else { await c.connect(usuario, clave); }
