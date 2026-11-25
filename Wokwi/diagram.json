@@ -5,7 +5,7 @@
   "parts": [
     {"type":"board-esp32-c3-devkitm-1","id":"esp","top":20,"left":0,"attrs":{}},
     {"type":"wokwi-led","id":"led1","top":-30,"left":250,"attrs":{"color":"red"}},
-    {"type":"wokwi-resistor","id":"r1","top":20,"left":180,"attrs":{"value":"220"}},
+    {"type":"wokwi-resistor","id":"r1","top":20,"left":180,"attrs":{"value":"1000"}},
     {"type":"wokwi-pushbutton","id":"btn","top":150,"left":250,"attrs":{}},
     {"type":"wokwi-buzzer","id":"buzz","top":80,"left":250,"attrs":{"volume":"0.1"}}
   ],
